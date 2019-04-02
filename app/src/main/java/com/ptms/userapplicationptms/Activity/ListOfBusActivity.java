@@ -23,6 +23,7 @@ import com.ptms.userapplicationptms.Adapter.BusAdapter;
 import com.ptms.userapplicationptms.Model.SingleBusClass;
 import com.ptms.userapplicationptms.R;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +36,8 @@ public class ListOfBusActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     ProgressBar progressBar;
     ArrayList<SingleBusClass> singleBus;
-    boolean flag1, flag2;
+    private MyAsynTask myAsynTask;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,13 +59,9 @@ public class ListOfBusActivity extends AppCompatActivity {
         recyclerView =  findViewById(R.id.recyclerView);
         recyclerView.setVisibility(View.INVISIBLE);
 
-
-
     }
 
     private ArrayList<SingleBusClass> getMyObjects() {
-        // This will return the ArrayList of your CustomClass objects
-        //onStart();
         return singleBus;
     }
 
@@ -72,48 +70,20 @@ public class ListOfBusActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Read from the database
-        flag1 = false;
-        flag2=false;
-        new AsyncCaller().execute();
-//        while(!flag1 && !flag2) {
-            //ArrayList<SingleBusClass> yourObjects = getMyObjects();
-            // Standard RecyclerView implementation
-//            flag1 = true;
+//        if(!isInternetAvailable())
+//        {
+//            printMessage("PLEASE CHECK YOUR CONNECTIVITY!!");
 //        }
-
-//        while(flag1 && !flag2) {
-            progressBar.setVisibility(View.INVISIBLE);
-
-            //assert recyclerView != null;
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-            singleBus = new ArrayList<>();
-            SingleBusClass s = new SingleBusClass("AHMEDABAD",
-                    "RAJKOT", "NULL");
-            singleBus.add(s);
-//        routes.add("R_1");
-//        routes.add("R_2");
-//        routes.add("R_5");
-//        routes.add("R_7");
-            BusAdapter adapter = new BusAdapter(singleBus);
-            adapter.setOnEntryClickListener(new BusAdapter.OnEntryClickListener() {
-                @Override
-                public void onEntryClick(View view, int position) {
-                    Toast.makeText(getApplicationContext(), "Clicked:" + position, Toast.LENGTH_SHORT).show();
-                }
-            });
-            recyclerView.setAdapter(adapter);
-            Log.d("OBJECT", "INFINAL");
-            recyclerView.setVisibility(View.VISIBLE);
-//            flag2=true;
-//        }
+        myAsynTask = new MyAsynTask();
+        myAsynTask.execute();
+        progressBar.setVisibility(View.VISIBLE);
     }
 
-    private class LongOperation extends AsyncTask<String, Void, String>{
+    private class MyAsynTask extends AsyncTask< Void, ArrayList<SingleBusClass>, ArrayList<SingleBusClass>>
+    {
 
         @Override
-        protected String doInBackground(String... strings) {
+        protected ArrayList<SingleBusClass> doInBackground(Void... voids) {
             myRefRoute.addValueEventListener(new ValueEventListener() {
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
@@ -203,6 +173,7 @@ public class ListOfBusActivity extends AppCompatActivity {
                                                     "" + ObjectDepartTime);
 
                                             singleBus.add(s);
+                                            publishProgress(singleBus);
                                             Log.d("OBJECT", "SUCCESS");
                                         }
 
@@ -231,34 +202,53 @@ public class ListOfBusActivity extends AppCompatActivity {
 
                 }
             });
-            return null;
-        }
-    }
-
-    private class YourAsyncTask extends AsyncTask<Void, Void, Void> {
-        private ProgressDialog dialog;
-
-        public YourAsyncTask(MyMainActivity activity) {
-            dialog = new ProgressDialog(activity);
+            return singleBus;
         }
 
         @Override
         protected void onPreExecute() {
-            dialog.setMessage("Doing something, please wait.");
-            dialog.show();
+            super.onPreExecute();
+            singleBus = new ArrayList<SingleBusClass>();
         }
+
         @Override
-        protected Void doInBackground(Void... args) {
-            // do background work here
-            return null;
+        protected void onProgressUpdate(ArrayList<SingleBusClass>... values) {
+            super.onProgressUpdate(values);
+            assert recyclerView != null;
+            recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+            BusAdapter adapter = new BusAdapter(values[0]);
+            adapter.setOnEntryClickListener(new BusAdapter.OnEntryClickListener() {
+                @Override
+                public void onEntryClick(View view, int position) {
+                    Toast.makeText(getApplicationContext(), "Clicked:" + position, Toast.LENGTH_SHORT).show();
+                }
+            });
+            recyclerView.setAdapter(adapter);
+            Log.d("OBJECT", "INFINALPROGRESS");
+            recyclerView.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.INVISIBLE);
         }
+
         @Override
-        protected void onPostExecute(Void result) {
-            // do UI work here
-            if (dialog.isShowing()) {
-                dialog.dismiss();
-            }
+        protected void onPostExecute(ArrayList<SingleBusClass> s)
+        {
+            super.onPostExecute(s);
+
         }
     }
+    private void printMessage(String s) {
+        Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+
+    }
+//    public boolean isInternetAvailable() {
+//        try {
+//            InetAddress ipAddr = InetAddress.getByName("google.com");
+//            //You can replace it with your name
+//            return !ipAddr.equals("");
+//
+//        } catch (Exception e) {
+//            return faalse;
+//        }
+//    }
 
 }

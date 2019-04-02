@@ -22,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.ptms.userapplicationptms.R;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,10 @@ public class CitySelection extends AppCompatActivity {
 
     protected void onStart() {
         super.onStart();
+        if(!isInternetAvailable())
+        {
+            printMessage("PLEASE CHECK YOUR CONNECTIVITY!!");
+        }
         databaseSource.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -73,6 +78,9 @@ public class CitySelection extends AppCompatActivity {
 
             }
         });
+
+
+
     }
 
 
@@ -149,5 +157,14 @@ public class CitySelection extends AppCompatActivity {
         return;
     }
 
+    public boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("google.com");
+            //You can replace it with your name
+            return !ipAddr.equals("");
 
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

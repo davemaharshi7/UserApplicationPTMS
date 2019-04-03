@@ -1,6 +1,9 @@
 package com.ptms.userapplicationptms.Activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -12,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -26,16 +30,18 @@ import com.ptms.userapplicationptms.R;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class ListOfBusActivity extends AppCompatActivity {
-    FirebaseDatabase database;
-    DatabaseReference myRefRoute,myRefBusRouteTime,myRefCity;
-    List<String> routes = new ArrayList<String>();
-    String src,dest,src_name,dest_name;
-    RecyclerView recyclerView;
-    ProgressBar progressBar;
-    ArrayList<SingleBusClass> singleBus;
+    private FirebaseDatabase database;
+    private DatabaseReference myRefRoute,myRefBusRouteTime,myRefCity;
+    private List<String> routes = new ArrayList<String>();
+    private String src,dest,src_name,dest_name;
+    private RecyclerView recyclerView;
+    private ProgressBar progressBar;
+    private TextView textView;
+    private ArrayList<SingleBusClass> singleBus;
     private MyAsynTask myAsynTask;
 
     @Override
@@ -53,7 +59,10 @@ public class ListOfBusActivity extends AppCompatActivity {
         src_name = getIntent().getStringExtra("src");
         dest_name = getIntent().getStringExtra("dest");
         String d = "Buses from "+src_name+" to "+dest_name;
+        textView = findViewById(R.id.ErrorMsg);
+        textView.setVisibility(View.GONE);
         this.setTitle(d);
+
         progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.VISIBLE);
         recyclerView =  findViewById(R.id.recyclerView);
@@ -70,10 +79,7 @@ public class ListOfBusActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-//        if(!isInternetAvailable())
-//        {
-//            printMessage("PLEASE CHECK YOUR CONNECTIVITY!!");
-//        }
+
         myAsynTask = new MyAsynTask();
         myAsynTask.execute();
         progressBar.setVisibility(View.VISIBLE);
@@ -155,33 +161,22 @@ public class ListOfBusActivity extends AppCompatActivity {
                                     String src_key = arrOfsrc[0];
                                     String dest_key = arrOfsrc[1];
 
-                                    myRefCity.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            String ObjectSrcName = dataSnapshot.child(src_key).child
-                                                    ("City_Name")
-                                                    .getValue
-                                                            (String.class);
-                                            String ObjectDestName = dataSnapshot.child(dest_key)
-                                                    .child("City_Name").getValue(String.class);
-                                            String ObjectDepartTime = bus_depart_time;
-
-                                            SingleBusClass s = new SingleBusClass(ObjectSrcName,
-                                                    ObjectDestName, ObjectDepartTime);
-                                            Log.d("OBJECT", "Src is: " + ObjectSrcName + ", Dest is: " +
+                                    //FETCHING names from Global HashMap
+                                    SharedPreferences pref= getApplicationContext().getSharedPreferences("HashMapCityName",
+                                            Context.MODE_PRIVATE);
+                                    HashMap<String, String> map= (HashMap<String, String> )pref.getAll();
+                                    String ObjectSrcName = map.get(src_key);
+                                    String ObjectDestName =map.get(dest_key);
+                                    String ObjectDepartTime = bus_depart_time;
+                                    SingleBusClass s = new SingleBusClass(ObjectSrcName,
+                                                    ObjectDestName, ObjectDepartTime,bus_id,route_id);
+                                    Log.d("OBJECT", "Src is: " + ObjectSrcName + ", Dest is: " +
                                                     "" + ObjectDestName + ",Depart Time: " +
                                                     "" + ObjectDepartTime);
+                                    singleBus.add(s);
+                                    publishProgress(singleBus);
+                                    Log.d("OBJECT", "SUCCESS");
 
-                                            singleBus.add(s);
-                                            publishProgress(singleBus);
-                                            Log.d("OBJECT", "SUCCESS");
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
 
                                 }
 
@@ -217,14 +212,28 @@ public class ListOfBusActivity extends AppCompatActivity {
             assert recyclerView != null;
             recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
             BusAdapter adapter = new BusAdapter(values[0]);
+//            int size = 0;
+//            size = values[0].isEmpty();
             adapter.setOnEntryClickListener(new BusAdapter.OnEntryClickListener() {
                 @Override
-                public void onEntryClick(View view, int position) {
-                    Toast.makeText(getApplicationContext(), "Clicked:" + position, Toast.LENGTH_SHORT).show();
+                public void onEntryClick(View view, int position,String busid, String routeId) {
+                    printMessage("Position: "+position+" data:"+busid+" RouteId :"+routeId);
+                    Intent i = new Intent(getApplicationContext(),BusDetailsActivity.class);
+                    i.putExtra("busid",busid);
+                    i.putExtra("routeid",routeId);
+                    startActivity(i);
                 }
             });
             recyclerView.setAdapter(adapter);
-            Log.d("OBJECT", "INFINALPROGRESS");
+            //Log.d("COUNT", "COUNT"+values[0].isEmpty());
+//            if(values[0].isEmpty()|| adapter == null)
+//            {
+//                Log.d("OBJECT","GONE");
+//                recyclerView.setVisibility(View.INVISIBLE);
+//                progressBar.setVisibility(View.INVISIBLE);
+//                textView.setVisibility(View.VISIBLE);
+//
+//            }
             recyclerView.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.INVISIBLE);
         }
@@ -236,19 +245,12 @@ public class ListOfBusActivity extends AppCompatActivity {
 
         }
     }
+
+
     private void printMessage(String s) {
         Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
 
     }
-//    public boolean isInternetAvailable() {
-//        try {
-//            InetAddress ipAddr = InetAddress.getByName("google.com");
-//            //You can replace it with your name
-//            return !ipAddr.equals("");
-//
-//        } catch (Exception e) {
-//            return faalse;
-//        }
-//    }
+
 
 }

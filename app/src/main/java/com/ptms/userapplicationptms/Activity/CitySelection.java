@@ -1,12 +1,22 @@
 package com.ptms.userapplicationptms.Activity;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -34,32 +44,29 @@ public class CitySelection extends AppCompatActivity {
     SharedPreferences shared;
     Button next;
     TextView loading;
-    String source,dest;
-    private int src_key,dest_key;
+    String source, dest;
+    private int src_key, dest_key;
     FirebaseAuth mAuth;
     HashMap<String, Integer> hash_table = new HashMap<>();
-
-    //TODO:please change appropriately
     HashMap<Integer, String> hash_city_name = new HashMap<>();
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     protected void onStart() {
         super.onStart();
-        if(!isInternetAvailable())
-        {
-            printMessage("PLEASE CHECK YOUR CONNECTIVITY!!");
-        }
+
         databaseSource.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 List<String> cities = new ArrayList<String>();
                 hash_table.clear();
 
-                for (DataSnapshot areaSnapshot: dataSnapshot.getChildren()) {
+                for (DataSnapshot areaSnapshot : dataSnapshot.getChildren()) {
                     String city_key = areaSnapshot.getKey();
                     String city_name = areaSnapshot.child("City_Name").getValue(String.class);
 //                    Log.i("KEEEEYYY:",city_key);
-                    hash_table.put(city_name,Integer.parseInt(city_key));
-                    hash_city_name.put(Integer.parseInt(city_key),city_name);
+                    hash_table.put(city_name, Integer.parseInt(city_key));
+                    hash_city_name.put(Integer.parseInt(city_key), city_name);
                     cities.add(city_name);
                 }
                 Collections.sort(cities);
@@ -70,6 +77,25 @@ public class CitySelection extends AppCompatActivity {
                 destSpinner.setAdapter(areasAdapter);
                 next.setEnabled(true);
                 loading.setVisibility(View.INVISIBLE);
+
+                SharedPreferences pref = getApplicationContext().getSharedPreferences
+                        ("HashMapCityKey",
+                                Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = pref.edit();
+
+                for (String s : hash_table.keySet()) {
+                    editor.putInt(s, hash_table.get(s));
+                }
+                editor.commit();
+                SharedPreferences pref1 = getApplicationContext().getSharedPreferences
+                        ("HashMapCityName",
+                                Context.MODE_PRIVATE);
+                SharedPreferences.Editor ed = pref1.edit();
+
+                for (Integer s : hash_city_name.keySet()) {
+                    ed.putString(Integer.toString(s), hash_city_name.get(s));
+                }
+                ed.commit();
             }
 
 
@@ -78,7 +104,6 @@ public class CitySelection extends AppCompatActivity {
 
             }
         });
-
 
 
     }
@@ -93,52 +118,95 @@ public class CitySelection extends AppCompatActivity {
         destSpinner = (Spinner) findViewById(R.id.destSpinner);
         next = (Button) findViewById(R.id.nextBtn);
         loading = (TextView) findViewById(R.id.loading);
-
         mAuth = FirebaseAuth.getInstance();
-
         //For testing Shared Data
         shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
-
-//        SharedPreferences pref= getApplicationContext().getSharedPreferences("City_Map", Context
-//                .MODE_PRIVATE);
-//        SharedPreferences.Editor editor= pref.edit();
-//
-//        for (String s : hash_table.keySet()) {
-//            editor.putInt(s, hash_table.get(s));
-//        }
-
         //printMessage(shared.getString("bus_id","NULL"));
         next.setEnabled(false);
-
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 source = srcSpinner.getSelectedItem().toString();
                 dest = destSpinner.getSelectedItem().toString();
-                if(source == null && dest == null)
-                {
+                if (source == null && dest == null) {
                     printMessage("Please Wait for cities to Load...");
-                }
-                else if(!TextUtils.equals(source,dest)){
+                } else if (!TextUtils.equals(source, dest)) {
 
-                     src_key = hash_table.get(source);
-                     dest_key = hash_table.get(dest);
+                    src_key = hash_table.get(source);
+                    dest_key = hash_table.get(dest);
                     //Log.i("KEEEEY:",Integer.p);
                     SharedPreferences.Editor editor = shared.edit();
-                    editor.putString("source",source);
-                    editor.putString("destination",dest);
-                    editor.putInt("source_key",src_key);
-                    editor.putInt("destination_key",dest_key);
+                    editor.putString("source", source);
+                    editor.putString("destination", dest);
+                    editor.putInt("source_key", src_key);
+                    editor.putInt("destination_key", dest_key);
                     editor.commit();
                     changeActivity();
 
-                }
-                else {
+                } else {
                     printMessage("Source and Destination Cannot be Same!");
                 }
             }
         });
 
+        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                Log.i("LOCATION", Double.toString(location.getLatitude()) + " & "+ Double
+                        .toString(location.getLongitude()));
+                Double latitude = location.getLatitude()*100;
+                Double longitude = location.getLongitude()*100;
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission
+                        .ACCESS_FINE_LOCATION}, 1);
+                return;
+
+            } else {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,
+                        locationListener);
+
+            }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)
+                    ==  PackageManager.PERMISSION_GRANTED){
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0 , 0,
+                        locationListener);
+
+            }
+        }
     }
 
     private void printMessage(String s) {
@@ -153,18 +221,8 @@ public class CitySelection extends AppCompatActivity {
         intent.putExtra("src",source);
         intent.putExtra("dest",dest);
         startActivity(intent);
-//        finish();
-        return;
     }
 
-    public boolean isInternetAvailable() {
-        try {
-            InetAddress ipAddr = InetAddress.getByName("google.com");
-            //You can replace it with your name
-            return !ipAddr.equals("");
 
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
 }

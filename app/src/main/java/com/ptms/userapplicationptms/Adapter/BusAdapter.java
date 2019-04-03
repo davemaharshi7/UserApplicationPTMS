@@ -15,20 +15,23 @@ public class BusAdapter extends RecyclerView.Adapter<BusAdapter.BusViewHolder> {
 
     public class BusViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener  {
 
-        TextView routeSrc,routeDest,departTime;
+        TextView routeSrc,routeDest,departTime,busid,routeid;
 
         BusViewHolder(View itemView) {
             super(itemView);
-            routeSrc = (TextView) itemView.findViewById(R.id.routeSrc);
-            routeDest = (TextView) itemView.findViewById(R.id.routeDest);
-            departTime = (TextView) itemView.findViewById(R.id.departTime);
-
+            itemView.setOnClickListener(this);
+            routeSrc =  itemView.findViewById(R.id.routeSrc);
+            routeDest =  itemView.findViewById(R.id.routeDest);
+            departTime =  itemView.findViewById(R.id.departTime);
+            busid = itemView.findViewById(R.id.busId);
+            routeid = itemView.findViewById(R.id.routeId);
         }
 
         @Override
         public void onClick(View v) {
             if (mOnEntryClickListener != null) {
-                mOnEntryClickListener.onEntryClick(v, getLayoutPosition());
+                mOnEntryClickListener.onEntryClick(v, getLayoutPosition(),busid.getText()
+                        .toString(),routeid.getText().toString());
             }
         }
     }
@@ -55,24 +58,30 @@ public class BusAdapter extends RecyclerView.Adapter<BusAdapter.BusViewHolder> {
     public void onBindViewHolder(BusViewHolder holder, int position) {
         SingleBusClass object = mCustomObjects.get(position);
 
-        // My example assumes CustomClass objects have getFirstText() and getSecondText() methods
         String rSrc = object.getRouteSource();
         String rDest= object.getRouteDestination();
         String time= object.getDepartTime();
+        String bus_id = object.getBus_id();
+        String route_id = object.getRoute_id();
 
         holder.routeSrc.setText(rSrc);
         holder.routeDest.setText(rDest);
         holder.departTime.setText(time);
+        holder.busid.setText(bus_id);
+        holder.routeid.setText(route_id);
+
+
     }
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
     }
+
     private OnEntryClickListener mOnEntryClickListener;
 
     public interface OnEntryClickListener {
-        void onEntryClick(View view, int position);
+        void onEntryClick(View view, int position,String busid,String routeid);
     }
 
     public void setOnEntryClickListener(OnEntryClickListener onEntryClickListener) {

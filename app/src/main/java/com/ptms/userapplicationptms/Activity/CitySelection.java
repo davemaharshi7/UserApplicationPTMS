@@ -47,6 +47,7 @@ public class CitySelection extends AppCompatActivity {
     String source, dest;
     private int src_key, dest_key;
     FirebaseAuth mAuth;
+    Double latitude,longitude;
     HashMap<String, Integer> hash_table = new HashMap<>();
     HashMap<Integer, String> hash_city_name = new HashMap<>();
     private LocationManager locationManager;
@@ -155,9 +156,11 @@ public class CitySelection extends AppCompatActivity {
             public void onLocationChanged(Location location) {
                 Log.i("LOCATION", Double.toString(location.getLatitude()) + " & "+ Double
                         .toString(location.getLongitude()));
-                Double latitude = location.getLatitude()*100;
-                Double longitude = location.getLongitude()*100;
-
+                latitude = location.getLatitude()*100;
+                longitude = location.getLongitude()*100;
+                locationManager.removeUpdates(locationListener);
+//                SharedPreferences.Editor editor = shared.edit();
+//                editor.putFloat("latitude", latitude);
             }
 
             @Override
@@ -189,9 +192,8 @@ public class CitySelection extends AppCompatActivity {
                 return;
 
             } else {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1,
                         locationListener);
-
             }
 
     }

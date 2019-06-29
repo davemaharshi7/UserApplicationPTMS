@@ -42,7 +42,7 @@ public class CitySelection extends AppCompatActivity {
     DatabaseReference databaseSource;
     Spinner srcSpinner, destSpinner;
     SharedPreferences shared;
-    Button next;
+    Button next,addbalance;
     TextView loading;
     String source, dest;
     private int src_key, dest_key;
@@ -50,8 +50,8 @@ public class CitySelection extends AppCompatActivity {
     Double latitude,longitude;
     HashMap<String, Integer> hash_table = new HashMap<>();
     HashMap<Integer, String> hash_city_name = new HashMap<>();
-    private LocationManager locationManager;
-    private LocationListener locationListener;
+//    private LocationManager locationManager;
+//    private LocationListener locationListener;
 
     protected void onStart() {
         super.onStart();
@@ -118,6 +118,7 @@ public class CitySelection extends AppCompatActivity {
         srcSpinner = (Spinner) findViewById(R.id.srcSpinner);
         destSpinner = (Spinner) findViewById(R.id.destSpinner);
         next = (Button) findViewById(R.id.nextBtn);
+        addbalance = findViewById(R.id.addBalance);
         loading = (TextView) findViewById(R.id.loading);
         mAuth = FirebaseAuth.getInstance();
         //For testing Shared Data
@@ -150,66 +151,75 @@ public class CitySelection extends AppCompatActivity {
             }
         });
 
-        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
-        locationListener = new LocationListener() {
+
+        addbalance.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onLocationChanged(Location location) {
-                Log.i("LOCATION", Double.toString(location.getLatitude()) + " & "+ Double
-                        .toString(location.getLongitude()));
-                latitude = location.getLatitude()*100;
-                longitude = location.getLongitude()*100;
-                locationManager.removeUpdates(locationListener);
-//                SharedPreferences.Editor editor = shared.edit();
-//                editor.putFloat("latitude", latitude);
+            public void onClick(View v) {
+                Intent intent1 = new Intent(getApplicationContext(),QrCardScanner.class);
+                startActivity(intent1);
+                finish();
             }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission
-                        .ACCESS_FINE_LOCATION}, 1);
-                return;
-
-            } else {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1,
-                        locationListener);
-            }
+        });
+//        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+//        locationListener = new LocationListener() {
+//            @Override
+//            public void onLocationChanged(Location location) {
+//                Log.i("LOCATION", Double.toString(location.getLatitude()) + " & "+ Double
+//                        .toString(location.getLongitude()));
+//                latitude = location.getLatitude()*100;
+//                longitude = location.getLongitude()*100;
+//                locationManager.removeUpdates(locationListener);
+////                SharedPreferences.Editor editor = shared.edit();
+////                editor.putFloat("latitude", latitude);
+//            }
+//
+//            @Override
+//            public void onStatusChanged(String provider, int status, Bundle extras) {
+//
+//            }
+//
+//            @Override
+//            public void onProviderEnabled(String provider) {
+//
+//            }
+//
+//            @Override
+//            public void onProviderDisabled(String provider) {
+//
+//            }
+//        };
+//
+//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                // TODO: Consider calling
+//                //    ActivityCompat#requestPermissions
+//                // here to request the missing permissions, and then overriding
+//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//                //                                          int[] grantResults)
+//                // to handle the case where the user grants the permission. See the documentation
+//                // for ActivityCompat#requestPermissions for more details.
+//                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission
+//                        .ACCESS_FINE_LOCATION}, 1);
+//                return;
+//
+//            } else {
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1,
+//                        locationListener);
+//            }
 
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)
-                    ==  PackageManager.PERMISSION_GRANTED){
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0 , 0,
-                        locationListener);
-
-            }
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+//            if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)
+//                    ==  PackageManager.PERMISSION_GRANTED){
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0 , 0,
+//                        locationListener);
+//
+//            }
+//        }
+//    }
 
     private void printMessage(String s) {
         Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();

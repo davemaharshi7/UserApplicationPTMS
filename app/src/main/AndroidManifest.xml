@@ -3,7 +3,7 @@
     package="com.ptms.userapplicationptms">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -14,9 +14,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".Activity.MainActivity"
-            android:screenOrientation="portrait">
-
-        </activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.CitySelection"
             android:screenOrientation="portrait">
@@ -26,8 +24,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.ListOfBusActivity" />
-        <activity android:name=".Activity.BusDetailsActivity" />
+        <activity android:name=".Activity.ListOfBusActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activity.BusDetailsActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activity.MapBoxActivity" />
+        <activity android:name=".Activity.QrCardScanner"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activity.cardPinActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activity.EnterAmountActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

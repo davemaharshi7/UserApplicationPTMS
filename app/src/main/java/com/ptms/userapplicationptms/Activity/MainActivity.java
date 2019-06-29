@@ -13,6 +13,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private MapView mapView;
     private DatabaseReference myRefLocation;
     private FirebaseDatabase database;
+
+//    private MainActivityLocationCallback callback = new MainActivityLocationCallback(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +59,8 @@ public class MainActivity extends AppCompatActivity {
                         myRefLocation.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                Double lati = dataSnapshot.child(busid).child("latitude")
-                                        .getValue(Double.class);
-                                Double longitude =dataSnapshot.child(busid).child("longitude")
-                                        .getValue(Double.class);
+                                Double lati = dataSnapshot.child(busid).child("latitude").getValue(Double.class);
+                                Double longitude =dataSnapshot.child(busid).child("longitude").getValue(Double.class);
                                 Log.i("MAIN ACTIVITY",lati+"$$$"+longitude);
                                 style.addImage("marker-icon-id",
                                         BitmapFactory.decodeResource(
@@ -73,6 +75,13 @@ public class MainActivity extends AppCompatActivity {
                                         PropertyFactory.iconImage("marker-icon-id")
                                 );
                                 style.addLayer(symbolLayer);
+                                LatLng l = new LatLng();
+                                l.setLatitude(lati);
+                                l.setLongitude(longitude);
+                                mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                                        .target(l)
+                                        .zoom(18)
+                                        .build());
                             }
 
                             @Override
